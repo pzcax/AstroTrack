@@ -26,6 +26,14 @@ class Astronaut:
         self.bps, self.bpd = self.base_bp
         self.rsr = self.base_rsr
 
+        # drifts
+        self.bpm_drift = random.uniform(-0.02, 0.02)
+        self.bo_drift  = random.uniform(-0.001, 0.001)
+        self.tmp_drift = random.uniform(-0.0005, 0.0005)
+        self.bps_drift = random.uniform(-0.01, 0.01)
+        self.bpd_drift = random.uniform(-0.01, 0.01)
+        self.rsr_drift = random.uniform(-0.005, 0.005)
+
         # conditions (for simulation purposes)
         self.conditions = {
             "hypoxia_normal": {
@@ -35,6 +43,15 @@ class Astronaut:
                     "rsr": -1
                 }
             }
+        }
+
+        self.DRIFT_MAP = {
+            "bpm": self.bpm_drift,
+            "bo": self.bo_drift,
+            "tmp": self.tmp_drift,
+            "bps": self.bps_drift,
+            "bpd": self.bpd_drift,
+            "rsr": self.rsr_drift
         }
 
         # internal stats
@@ -77,13 +94,15 @@ class Astronaut:
             print(condition)
             print(conData)
 
-    def reset_drifts(self):
-        self.bpm_drift = random.uniform(-0.02, 0.02)
-        self.bo_drift  = random.uniform(-0.001, 0.001)
-        self.tmp_drift = random.uniform(-0.0005, 0.0005)
-        self.bps_drift = random.uniform(-0.01, 0.01)
-        self.bpd_drift = random.uniform(-0.01, 0.01)
-        self.rsr_drift = random.uniform(-0.005, 0.005)
+            effects = conData["effects"]
+            for effect in effects:
+                if not effect in self.DRIFT_MAP: # validity is IMPORTANT!!
+                    print("Effect not in DRIFT_MAP (rip skill issue lawl)")
+                    return
+
+                # actually change it lawl
+                drift = self.DRIFT_MAP[effect]
+                drift += effects[effect]
 
 astronaut = Astronaut(
     "Alex Morgan",
@@ -97,10 +116,9 @@ astronaut = Astronaut(
 
 tracking = True
 
-astronaut.reset_drifts()
+astronaut.inflict_condition("hypoxia_normal")
 
 while tracking:
     astronaut.update_health()
     print(astronaut.generate_reading())
-    astronaut.inflict_condition("hypoxia_normal")
     sleep(5)
