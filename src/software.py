@@ -50,12 +50,12 @@ class Astronaut:
 
         print(self._dt)
 
-        self.bpm = round(random.gauss(self.bpm + self.bpm_drift * self.dt, 1.5))
-        self.bo  = round(random.gauss(self.bo  + self.bo_drift  * self.dt, 0.2), 1)
-        self.tmp = round(random.gauss(self.tmp + self.tmp_drift * self.dt, 0.05), 2)
-        self.bps = round(random.gauss(self.bps + self.bps_drift * self.dt, 1))
-        self.bpd = round(random.gauss(self.bpd + self.bpd_drift * self.dt, 1))
-        self.rsr = round(random.gauss(self.rsr + self.rsr_drift * self.dt, 0.5))
+        self.bpm = round(random.gauss(self.bpm + self.bpm_drift * self._dt, 1.5))
+        self.bo  = round(random.gauss(self.bo  + self.bo_drift  * self._dt, 0.2), 1)
+        self.tmp = round(random.gauss(self.tmp + self.tmp_drift * self._dt, 0.05), 2)
+        self.bps = round(random.gauss(self.bps + self.bps_drift * self._dt, 1))
+        self.bpd = round(random.gauss(self.bpd + self.bpd_drift * self._dt, 1))
+        self.rsr = round(random.gauss(self.rsr + self.rsr_drift * self._dt, 0.5))
 
     def generate_reading(self):
         return {
@@ -98,9 +98,9 @@ astronaut = Astronaut(
 tracking = True
 
 astronaut.reset_drifts()
-astronaut.inflict_condition("hypoxia_normal")
 
-#while tracking:
-#    astronaut.update_health()
-#    print(astronaut.generate_reading())
-#    sleep(5)
+while tracking:
+    astronaut.update_health()
+    print(astronaut.generate_reading())
+    astronaut.inflict_condition("hypoxia_normal")
+    sleep(5)
