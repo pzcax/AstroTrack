@@ -97,8 +97,8 @@ astronaut = Astronaut(
 
 tracking = True
 
-astronaut._reset_drifts()
-astronaut._inflict_condition("hypoxia_normal")
+astronaut.reset_drifts()
+astronaut.inflict_condition("hypoxia_normal")
 
 #while tracking:
 #    astronaut.update_health()
