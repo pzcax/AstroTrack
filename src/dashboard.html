@@ -1,0 +1,95 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AstroTrack</title>
+<style>
+body{margin:24px;background:#fff;color:#222;font:14px Arial,sans-serif}
+h1{font-size:22px;margin-bottom:4px}h2{font-size:16px;margin-top:24px}.muted{color:#666}.status{font-weight:bold}.normal{color:#21834a}.warning{color:#a66b00}.critical{color:#b3261e}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;align-items:start}.main{min-width:0}.sidebar{position:sticky;top:16px;border:1px solid #999;padding:14px;max-height:calc(100vh - 32px);overflow-y:auto}
+table{border-collapse:collapse;width:100%;max-width:850px;margin-top:12px}th,td{border:1px solid #ccc;padding:9px;text-align:left}th{background:#eee}.reading{font-weight:bold}
+#chart{display:block;width:100%;max-width:100%;height:260px;border:1px solid #ccc;background:#fff}.chart-options{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0}.chart-options label{white-space:nowrap}
+button,select,textarea{font:inherit;padding:6px}button{cursor:pointer}#alerts{max-width:850px}.alert{border:1px solid #c99b45;background:#fff8e8;padding:10px;margin:8px 0}.alert p{margin:5px 0 0}
+#assessment h2{margin-top:0}#assessment label{display:block;margin:10px 0 4px}#assessment textarea{box-sizing:border-box;width:100%;min-height:65px}#assessment input[type=checkbox]{margin-right:5px}#assessment .symptom{margin:7px 0}#assessment-result{max-width:850px;margin-top:18px}footer{margin-top:28px;color:#666;font-size:12px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static;max-height:none;grid-row:1}}
+</style>
+</head>
+<body>
+<h1>AstroTrack</h1>
+<div class="muted">Crew member: <strong id="astronaut-name">Loading...</strong> | <span id="clock"></span></div>
+<div class="layout">
+<main class="main">
+<h2>Current health</h2>
+<table>
+<thead><tr><th>Indicator</th><th>Reading</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Heart rate</td><td class="reading" id="heart-rate">--</td><td id="heart-rate-status">--</td></tr>
+<tr><td>Blood oxygen</td><td class="reading" id="blood-oxygen">--</td><td id="blood-oxygen-status">--</td></tr>
+<tr><td>Temperature</td><td class="reading" id="temperature">--</td><td id="temperature-status">--</td></tr>
+<tr><td>Blood pressure</td><td class="reading" id="blood-pressure">--</td><td id="blood-pressure-status">--</td></tr>
+<tr><td>Respiratory rate</td><td class="reading" id="respiratory-rate">--</td><td id="respiratory-rate-status">--</td></tr>
+</tbody>
+</table>
+<h2>History</h2>
+<div class="muted">Select one or more readings to compare their trends. Each line is normalized to its own range, so compare direction and shape, not absolute values.</div>
+<div class="chart-options">
+<label><input type="checkbox" class="chart-metric" value="heart_rate" checked> Heart rate</label>
+<label><input type="checkbox" class="chart-metric" value="blood_oxygen"> Blood oxygen</label>
+<label><input type="checkbox" class="chart-metric" value="temperature"> Temperature</label>
+<label><input type="checkbox" class="chart-metric" value="respiratory_rate"> Respiratory rate</label>
+</div>
+<canvas id="chart" width="850" height="260"></canvas>
+<h2>Alerts</h2>
+<div id="alerts" class="muted">No active alerts.</div>
+<div id="assessment-result" style="display:none">
+<h2>Assessment summary</h2>
+<p><strong id="result-scenario"></strong></p>
+<p id="result-experience"></p>
+<h3>Recommended response</h3>
+<ol id="result-steps"></ol>
+<p class="muted" id="result-simulation"></p>
+</div>
+</main>
+<aside class="sidebar">
+<div id="assessment">
+<h2>Self-assessment</h2>
+<p id="assessment-question">Complete this check-in at any time, or when an alert appears.</p>
+<form id="assessment-form">
+<label for="feeling">How are you feeling?</label>
+<select id="feeling" required>
+<option value="">Select one</option><option>Normal</option><option>Slightly unwell</option><option>Unwell</option><option>Severely unwell</option>
+</select>
+<label>Are you experiencing any of these?</label>
+<div class="symptom"><label><input type="checkbox" value="Dizziness">Dizziness</label></div>
+<div class="symptom"><label><input type="checkbox" value="Shortness of breath">Shortness of breath</label></div>
+<div class="symptom"><label><input type="checkbox" value="Headache">Headache</label></div>
+<div class="symptom"><label><input type="checkbox" value="Unusual fatigue">Unusual fatigue</label></div>
+<div class="symptom"><label><input type="checkbox" value="Nausea">Nausea</label></div>
+<div class="symptom"><label><input type="checkbox" value="Feeling unusually warm">Feeling unusually warm</label></div>
+<label for="notes">Additional notes (optional)</label>
+<textarea id="notes"></textarea>
+<p><button type="submit">Submit assessment</button></p>
+</form>
+</div>
+</aside>
+</div>
+<script>
+const historyLimit=300;
+let historyData=[];
+let activeAlert=null;
+let dismissedAlerts=new Set();
+const metrics={heart_rate:{label:"Heart rate",unit:"BPM",color:"#245b8f"},blood_oxygen:{label:"Blood oxygen",unit:"%",color:"#21834a"},temperature:{label:"Temperature",unit:"°C",color:"#b45f06"},respiratory_rate:{label:"Respiratory rate",unit:"breaths/min",color:"#8b4a8f"}};
+function setStatus(id,status){const element=document.getElementById(id);element.textContent=status.toUpperCase();element.className="status "+status;}
+function updateDashboard(data){const r=data.reading;const s=data.status;document.getElementById("astronaut-name").textContent=r.name;document.getElementById("heart-rate").textContent=r.heart_rate+" BPM";setStatus("heart-rate-status",s.heart_rate);document.getElementById("blood-oxygen").textContent=r.blood_oxygen+"%";setStatus("blood-oxygen-status",s.blood_oxygen);document.getElementById("temperature").textContent=r.temperature+" °C";setStatus("temperature-status",s.temperature);document.getElementById("blood-pressure").textContent=r.blood_pressure.systolic+"/"+r.blood_pressure.diastolic+" mmHg";setStatus("blood-pressure-status",s.systolic==="warning"||s.diastolic==="warning"?"warning":"normal");document.getElementById("respiratory-rate").textContent=r.respiratory_rate+" breaths/min";setStatus("respiratory-rate-status",s.respiratory_rate);updateAlerts(data.alerts);}
+function updateAlerts(alerts){const container=document.getElementById("alerts");container.innerHTML="";if(!alerts.length){container.textContent="No active alerts.";container.className="muted";activeAlert=null;return;}container.className="";alerts.forEach(alert=>{const item=document.createElement("div");item.className="alert";const title=document.createElement("strong");title.textContent=alert.message;const prompt=document.createElement("p");prompt.textContent=alert.prompt;item.append(title,prompt);container.appendChild(item);});const nextAlert=alerts.find(alert=>!dismissedAlerts.has(alert.id));if(nextAlert&&!activeAlert){activeAlert=nextAlert;document.getElementById("assessment-question").textContent="Alert: "+nextAlert.prompt;}}
+function drawChart(){const canvas=document.getElementById("chart");const ctx=canvas.getContext("2d");const selected=[...document.querySelectorAll(".chart-metric:checked")].map(input=>input.value);const data=historyData.slice(-historyLimit);ctx.clearRect(0,0,canvas.width,canvas.height);const left=42,right=canvas.width-12,top=18,bottom=canvas.height-30;ctx.font="12px Arial";ctx.fillStyle="#555";ctx.strokeStyle="#ddd";for(let i=0;i<=4;i++){const y=top+(bottom-top)*i/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(String(100-i*25),5,y+4);}if(data.length<2){ctx.fillText("Waiting for more readings...",left,top+18);return;}if(!selected.length){ctx.fillText("Select at least one metric.",left,top+18);return;}selected.forEach(key=>{const values=data.map(item=>Number(item[key])).filter(Number.isFinite);if(values.length<2)return;let min=Math.min(...values),max=Math.max(...values);if(max===min){min-=1;max+=1;}ctx.strokeStyle=metrics[key].color;ctx.lineWidth=2;ctx.beginPath();values.forEach((value,index)=>{const normalized=(value-min)/(max-min);const x=left+(right-left)*index/(values.length-1);const y=bottom-normalized*(bottom-top);if(index===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();});ctx.fillStyle="#555";ctx.fillText("Oldest",left,canvas.height-8);ctx.fillText("Newest",right-40,canvas.height-8);}
+async function refresh(){try{const responses=await Promise.all([fetch("/api/health"),fetch("/api/history")]);if(!responses[0].ok||!responses[1].ok)throw new Error("API request failed");const health=await responses[0].json();historyData=await responses[1].json();updateDashboard(health);drawChart();document.getElementById("connection").textContent="Connected";document.getElementById("connection").className="normal";}catch(error){document.getElementById("connection").textContent="Disconnected";document.getElementById("connection").className="critical";}}
+document.querySelectorAll(".chart-metric").forEach(input=>input.addEventListener("change",drawChart));
+document.getElementById("assessment-form").addEventListener("submit",async event=>{event.preventDefault();const symptoms=[...document.querySelectorAll('#assessment input[type="checkbox"]:checked')].map(input=>input.value);const result=await fetch("/api/assessment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({alert_id:activeAlert?activeAlert.id:"manual-assessment",feeling:document.getElementById("feeling").value,symptoms,notes:document.getElementById("notes").value})});if(result.ok){const payload=await result.json();const assessment=payload.assessment;document.getElementById("result-scenario").textContent=assessment.scenario;document.getElementById("result-experience").textContent=assessment.experience;const steps=document.getElementById("result-steps");steps.innerHTML="";assessment.next_steps.forEach(step=>{const item=document.createElement("li");item.textContent=step;steps.appendChild(item);});document.getElementById("assessment-result").style.display="block";if(activeAlert)dismissedAlerts.add(activeAlert.id);activeAlert=null;document.getElementById("assessment-question").textContent="Assessment submitted. You can complete another check-in at any time.";document.getElementById("assessment-form").reset();}else{alert("Assessment could not be submitted. Check the API connection.");}});
+function updateClock(){document.getElementById("clock").textContent=new Date().toLocaleTimeString();}
+updateClock();setInterval(updateClock,1000);refresh();setInterval(refresh,1000);
+</script>
+</body>
+</html>

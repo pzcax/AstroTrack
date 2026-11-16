@@ -159,23 +159,3 @@ class Astronaut:
     def remove_condition(self, condition):
         self.active_conditions.discard(condition)
         print(f"Condition removed: {condition}")
-
-
-astronaut = Astronaut(
-    "Alex Morgan",
-    34,
-    65,
-    98,
-    36.7,
-    (115, 75),
-    14
-)
-
-tracking = True
-
-astronaut.inflict_condition("dehydration")
-
-while tracking:
-    astronaut.update_health()
-    print(astronaut.generate_reading())
-    sleep(5)
