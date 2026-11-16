@@ -5,29 +5,21 @@ class Astronaut:
     def __init__(self, name, age, base_bpm, base_bo, base_tmp, base_bp, base_rsr):
         # basic info
         self.name = name
-        self.age = age
+        self.age  = age
 
         # baselines
         self.base_bpm = base_bpm
-        self.base_bo = base_bo
+        self.base_bo  = base_bo
         self.base_tmp = base_tmp
-        self.base_bp = base_bp
+        self.base_bp  = base_bp
         self.base_rsr = base_rsr
 
         # actual
         self.bpm = self.base_bpm
-        self.bo = self.base_bo
+        self.bo  = self.base_bo
         self.tmp = self.base_tmp
         self.bps, self.bpd = self.base_bp
         self.rsr = self.base_rsr
-
-        # drifts
-        self.bpm_drift = random.uniform(-0.02, 0.02)
-        self.bo_drift = random.uniform(-0.001, 0.001)
-        self.tmp_drift = random.uniform(-0.0005, 0.0005)
-        self.bps_drift = random.uniform(-0.01, 0.01)
-        self.bpd_drift = random.uniform(-0.01, 0.01)
-        self.rsr_drift = random.uniform(-0.005, 0.005)
 
         # conditions
         self.conditions = {
@@ -75,9 +67,19 @@ class Astronaut:
         }
 
     def _inflict_condition(self, condition):
-        print(f"Inflicting: {condition}")
+        if condition in self.conditions:
+            conData = self.conditions[condition]
+            print(condition)
+            print(conData)
 
-        if condition == ""
+    def _reset_drifts(self):
+        self.bpm_drift = random.uniform(-0.02, 0.02)
+        self.bo_drift  = random.uniform(-0.001, 0.001)
+        self.tmp_drift = random.uniform(-0.0005, 0.0005)
+        self.bps_drift = random.uniform(-0.01, 0.01)
+        self.bpd_drift = random.uniform(-0.01, 0.01)
+        self.rsr_drift = random.uniform(-0.005, 0.005)
+
 astronaut = Astronaut(
     "Alex Morgan",
     34,
@@ -90,7 +92,10 @@ astronaut = Astronaut(
 
 tracking = True
 
-while tracking:
-    astronaut.update_health()
-    print(astronaut.generate_reading())
-    sleep(5)
+astronaut._reset_drifts()
+astronaut._inflict_condition("hypoxia_normal")
+
+#while tracking:
+#    astronaut.update_health()
+#    print(astronaut.generate_reading())
+#    sleep(5)
