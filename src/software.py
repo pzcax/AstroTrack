@@ -29,6 +29,17 @@ class Astronaut:
         self.bpd_drift = random.uniform(-0.01, 0.01)
         self.rsr_drift = random.uniform(-0.005, 0.005)
 
+        # conditions
+        self.conditions = {
+            "hypoxia_normal": {
+                "effects": {
+                    "bo": 1,
+                    "bpm": 2,
+                    "rsr": -1
+                }
+            }
+        }
+
         # internal stats
         self.dt = 0 # secs
         self.lastUpdateTime = perf_counter()
@@ -63,6 +74,10 @@ class Astronaut:
             "respiratory_rate": self.rsr
         }
 
+    def _inflict_condition(self, condition):
+        print(f"Inflicting: {condition}")
+
+        if condition == ""
 astronaut = Astronaut(
     "Alex Morgan",
     34,
