@@ -1,3 +1,8 @@
+"""
+Half of this is literally just generating fake astronaut data.
+"""
+
+
 import random
 from time import sleep, perf_counter
 
@@ -21,7 +26,7 @@ class Astronaut:
         self.bps, self.bpd = self.base_bp
         self.rsr = self.base_rsr
 
-        # conditions
+        # conditions (for simulation purposes)
         self.conditions = {
             "hypoxia_normal": {
                 "effects": {
@@ -33,17 +38,17 @@ class Astronaut:
         }
 
         # internal stats
-        self.dt = 0 # secs
-        self.lastUpdateTime = perf_counter()
+        self._dt = 0 # secs
+        self._lastUpdateTime = perf_counter()
 
     def update_health(self):
         # generating random values at runtime because we don't have actual astronauts;
         # you would hook this up to real equipment
         now = perf_counter()
-        self.dt = now - self.lastUpdateTime
-        self.lastUpdateTime = now
+        self._dt = now - self._lastUpdateTime
+        self._lastUpdateTime = now
 
-        print(self.dt)
+        print(self._dt)
 
         self.bpm = round(random.gauss(self.bpm + self.bpm_drift * self.dt, 1.5))
         self.bo  = round(random.gauss(self.bo  + self.bo_drift  * self.dt, 0.2), 1)
@@ -66,13 +71,13 @@ class Astronaut:
             "respiratory_rate": self.rsr
         }
 
-    def _inflict_condition(self, condition):
+    def inflict_condition(self, condition):
         if condition in self.conditions:
             conData = self.conditions[condition]
             print(condition)
             print(conData)
 
-    def _reset_drifts(self):
+    def reset_drifts(self):
         self.bpm_drift = random.uniform(-0.02, 0.02)
         self.bo_drift  = random.uniform(-0.001, 0.001)
         self.tmp_drift = random.uniform(-0.0005, 0.0005)
